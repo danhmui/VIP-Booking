@@ -1,0 +1,56 @@
+{
+  "name": "VIP-Booking",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./src/app.js",
+    "dev": "nodemon ./src/app.js",
+    "prisma:generate": "prisma generate --schema=prisma/migrations/schema.prisma",
+    "prisma:validate": "prisma validate --schema=prisma/migrations/schema.prisma"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "src"
+    ],
+    "ext": "js",
+    "ignore": [
+      "node_modules"
+    ],
+    "exec": "node ./src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zabaoit/VIP-Booking.git"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "mysql"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zabaoit/VIP-Booking.git"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.22.3",
+    "nodemailer": "^8.0.10",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "prisma": "^6.19.3"
+  },
+  "prisma": {
+    "schema": "prisma/migrations/schema.prisma"
+  }
+}

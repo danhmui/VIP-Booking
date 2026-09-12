@@ -1,0 +1,264 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum ServiceStatus {
+  active
+  inactive
+}
+
+enum UserStatus {
+  active
+  inactive
+  locked
+}
+
+enum RoomStatus {
+  available
+  booked
+  occupied
+  maintenance
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  checked_in
+  checked_out
+  cancelled
+}
+
+enum InvoiceStatus {
+  unpaid
+  partial_paid
+  paid
+  cancelled
+}
+
+enum InvoiceItemType {
+  room
+  service
+  surcharge
+  discount
+}
+
+enum CheckInOutStatus {
+  checked_in
+  checked_out
+}
+
+enum PaymentMethod {
+  cash
+  bank_transfer
+  online
+}
+
+enum PaymentStatus {
+  pending
+  success
+  failed
+  refunded
+}
+
+model Service {
+  service_id   BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+  service_name String         @db.VarChar(100)
+  description  String?        @db.Text
+  unit_price   Decimal        @db.Decimal(12, 2)
+  unit         String         @db.VarChar(20)
+  status       ServiceStatus
+  duration     Int?           @db.UnsignedInt
+  created_at   DateTime       @default(now()) @db.DateTime(0)
+  updated_at   DateTime       @default(now()) @db.DateTime(0)
+  usages       ServiceUsage[]
+
+  @@map("Service")
+}
+
+model ServiceUsage {
+  service_usage_id BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  service_id       BigInt   @db.UnsignedBigInt
+  quantity         Int      @db.UnsignedInt
+  unit_price       Decimal  @db.Decimal(12, 2)
+  subtotal         Decimal  @db.Decimal(12, 2)
+  note             String?  @db.VarChar(255)
+  used_at          DateTime @default(now()) @db.DateTime(0)
+  booking_id       BigInt?  @db.UnsignedBigInt
+  service          Service  @relation(fields: [service_id], references: [service_id], onDelete: NoAction, onUpdate: NoAction, map: "ServiceUsage_service_id_fkey")
+  booking          Booking? @relation(fields: [booking_id], references: [booking_id], onDelete: NoAction, onUpdate: NoAction, map: "ServiceUsage_booking_id_fkey")
+
+  @@index([service_id], map: "ServiceUsage_service_id_fkey")
+  @@index([booking_id], map: "ServiceUsage_booking_id_fkey")
+  @@map("ServiceUsage")
+}
+
+model User {
+  user_id       BigInt       @id @default(autoincrement()) @db.UnsignedBigInt
+  email         String       @unique(map: "email") @db.VarChar(100)
+  password_hash String       @db.VarChar(255)
+  full_name     String       @db.VarChar(100)
+  phone         String?      @db.VarChar(20)
+  status        UserStatus
+  created_at    DateTime     @default(now()) @db.DateTime(0)
+  updated_at    DateTime     @default(now()) @db.DateTime(0)
+  role_id       BigInt       @db.UnsignedBigInt
+  role          Role         @relation(fields: [role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction, map: "User_role_id_fkey")
+  bookings      Booking[]
+  checkins      CheckInOut[]
+  payments      Payment[]
+
+  reset_code         String?
+  reset_code_expires DateTime?
+  @@index([role_id], map: "User_role_id_fkey")
+  @@map("USER")
+}
+
+model Role {
+  role_id     BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  role_name   String  @unique(map: "role_name") @db.VarChar(50)
+  description String? @db.VarChar(255)
+  users       User[]
+
+  @@map("ROLE")
+}
+
+model RoomType {
+  room_type_id   BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  room_type_name String  @db.VarChar(50)
+  price          Decimal @db.Decimal(12, 2)
+  capacity       Int     @db.UnsignedInt
+  description    String? @db.VarChar(255)
+  rooms          Room[]
+
+  @@map("RoomType")
+}
+
+model Room {
+  room_id        BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  room_number    String          @unique(map: "room_number") @db.VarChar(10)
+  floor          Int             @db.UnsignedInt
+  status         RoomStatus
+  description    String?         @db.VarChar(255)
+  image_url      String?         @db.VarChar(255)
+  type_id        BigInt          @db.UnsignedBigInt
+  room_type      RoomType        @relation(fields: [type_id], references: [room_type_id], onDelete: NoAction, onUpdate: NoAction, map: "Room_type_id_fkey")
+  bookingDetails BookingDetail[]
+  checkins       CheckInOut[]
+
+  @@index([type_id], map: "Room_type_id_fkey")
+  @@map("Room")
+}
+
+model Booking {
+  booking_id      BigInt          @id @unique(map: "booking_id") @default(autoincrement()) @db.UnsignedBigInt
+  user_id         BigInt          @db.UnsignedBigInt
+  booking_date    DateTime        @default(now()) @db.DateTime(0)
+  check_in_date   DateTime        @db.Date
+  check_out_date  DateTime        @db.Date
+  guest_count     Int             @db.UnsignedInt
+  special_request String?         @db.Text
+  status          BookingStatus   @default(pending)
+  created_at      DateTime        @default(now()) @db.DateTime(0)
+  updated_at      DateTime        @default(now()) @db.DateTime(0)
+  user            User            @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "Booking_user_id_fkey")
+  details         BookingDetail[]
+  serviceUsages   ServiceUsage[]
+  invoices        Invoice[]
+  checkins        CheckInOut[]
+
+  @@index([user_id], map: "Booking_user_id_fkey")
+  @@map("Booking")
+}
+
+model BookingDetail {
+  booking_detail_id BigInt  @id @default(autoincrement())
+  booking_id        BigInt  @db.UnsignedBigInt
+  room_id           BigInt  @db.UnsignedBigInt
+  price_per_night   Decimal @db.Decimal(12, 2)
+  number_of_nights  Int
+  subtotal          Decimal @db.Decimal(12, 2)
+  note              String? @db.VarChar(255)
+  booking           Booking @relation(fields: [booking_id], references: [booking_id], onDelete: NoAction, onUpdate: NoAction, map: "BookingDetail_booking_id_fkey")
+  room              Room    @relation(fields: [room_id], references: [room_id], onDelete: NoAction, onUpdate: NoAction, map: "BookingDetail_room_id_fkey")
+
+  @@index([booking_id], map: "BookingDetail_booking_id_fkey")
+  @@index([room_id], map: "BookingDetail_room_id_fkey")
+  @@map("BookingDetail")
+}
+
+model Invoice {
+  invoice_id       BigInt          @id @default(autoincrement())
+  booking_id       BigInt          @db.UnsignedBigInt
+  invoice_code     String          @unique(map: "invoice_code") @db.VarChar(20)
+  issued_date      DateTime        @default(now()) @db.DateTime(0)
+  room_amount      Decimal         @default(0.00) @db.Decimal(12, 2)
+  service_amount   Decimal         @default(0.00) @db.Decimal(12, 2)
+  surcharge_amount Decimal         @default(0.00) @db.Decimal(12, 2)
+  discount_amount  Decimal         @default(0.00) @db.Decimal(12, 2)
+  tax_amount       Decimal         @default(0.00) @db.Decimal(12, 2)
+  total_amount     Decimal         @default(0.00) @db.Decimal(12, 2)
+  invoice_status   InvoiceStatus   @default(unpaid)
+  note             String?         @db.VarChar(255)
+  updated_at       DateTime        @default(now()) @db.DateTime(0)
+  booking          Booking         @relation(fields: [booking_id], references: [booking_id], onDelete: NoAction, onUpdate: NoAction, map: "Invoice_booking_id_fkey")
+  details          InvoiceDetail[]
+  payments         Payment[]
+
+  @@index([booking_id], map: "Invoice_booking_id_fkey")
+  @@map("Invoice")
+}
+
+model InvoiceDetail {
+  invoice_detail_id BigInt          @id @default(autoincrement())
+  invoice_id        BigInt
+  item_type         InvoiceItemType
+  reference_id      BigInt?
+  description       String          @db.VarChar(255)
+  quantity          Int             @default(1)
+  unit_price        Decimal         @default(0.00) @db.Decimal(12, 2)
+  amount            Decimal         @default(0.00) @db.Decimal(12, 2)
+  invoice           Invoice         @relation(fields: [invoice_id], references: [invoice_id], onDelete: NoAction, onUpdate: NoAction, map: "InvoiceDetail_invoice_id_fkey")
+
+  @@index([invoice_id], map: "InvoiceDetail_invoice_id_fkey")
+  @@map("InvoiceDetail")
+}
+
+model CheckInOut {
+  check_in_out_id BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  booking_id      BigInt           @db.UnsignedBigInt
+  room_id         BigInt           @db.UnsignedBigInt
+  staff_id        BigInt           @db.UnsignedBigInt
+  check_in_time   DateTime         @db.DateTime(0)
+  check_out_time  DateTime?        @db.DateTime(0)
+  status          CheckInOutStatus
+  note            String?          @db.VarChar(255)
+  booking         Booking          @relation(fields: [booking_id], references: [booking_id], onDelete: NoAction, onUpdate: NoAction, map: "CheckInOut_booking_id_fkey")
+  room            Room             @relation(fields: [room_id], references: [room_id], onDelete: NoAction, onUpdate: NoAction, map: "CheckInOut_room_id_fkey")
+  staff           User             @relation(fields: [staff_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "CheckInOut_staff_id_fkey")
+
+  @@index([booking_id], map: "CheckInOut_booking_id_fkey")
+  @@index([room_id], map: "CheckInOut_room_id_fkey")
+  @@index([staff_id], map: "CheckInOut_staff_id_fkey")
+  @@map("CheckInOut")
+}
+
+model Payment {
+  payment_id     BigInt        @id @default(autoincrement())
+  invoice_id     BigInt
+  amount         Decimal       @db.Decimal(12, 2)
+  payment_method PaymentMethod
+  status         PaymentStatus
+  paid_at        DateTime      @default(now()) @db.DateTime(0)
+  staff_id       BigInt        @db.UnsignedBigInt
+  invoice        Invoice       @relation(fields: [invoice_id], references: [invoice_id], onDelete: NoAction, onUpdate: NoAction, map: "Payment_invoice_id_fkey")
+  staff          User          @relation(fields: [staff_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "Payment_staff_id_fkey")
+
+  @@index([invoice_id], map: "Payment_invoice_id_fkey")
+  @@index([staff_id], map: "Payment_staff_id_fkey")
+  @@map("Payment")
+}
