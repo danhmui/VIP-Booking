@@ -9,6 +9,7 @@ import { images } from '../data/images'
 import { useAuth } from '../hooks/useAuth'
 import type { Navigate, Room, Service } from '../types'
 import { useLocalizedServices } from '../utils/serviceLocalization'
+import { getSelectedStay } from '../utils/bookingSelections'
 
 export function HomePage({ navigate }: { navigate: Navigate }) {
   const { showToast } = useToast()
@@ -16,8 +17,10 @@ export function HomePage({ navigate }: { navigate: Navigate }) {
   const [rooms, setRooms] = useState<Room[]>([])
   const [services, setServices] = useState<Service[]>([])
   const localizedServices = useLocalizedServices(services)
-  const [homeSearchTerm, setHomeSearchTerm] = useState('')
   const [hasSearched, setHasSearched] = useState(false)
+  
+  // Lưu lại thông tin số lượng khách được chọn từ SearchPanel
+  const [selectedGuests, setSelectedGuests] = useState('2')
 
   useEffect(() => {
     let isMounted = true
@@ -50,30 +53,22 @@ export function HomePage({ navigate }: { navigate: Navigate }) {
   }
 
   const handleHomeSearch = (payload: SearchPayload) => {
-    setHomeSearchTerm(payload.destination.trim().toLowerCase())
+    setSelectedGuests(payload.guests)
     setHasSearched(true)
   }
 
   const featuredRooms = useMemo(() => {
-    if (!homeSearchTerm) {
+    if (!hasSearched) {
       return rooms
     }
 
-    return rooms.filter((room) => {
-      const searchableText = [
-        room.name,
-        room.category,
-        room.location,
-        room.description,
-        ...room.amenities,
-        ...room.highlights,
-      ]
-        .join(' ')
-        .toLowerCase()
+    const guestLimit = Number.parseInt(selectedGuests, 10) || 1
 
-      return searchableText.includes(homeSearchTerm)
+    return rooms.filter((room) => {
+      const roomMaxGuests = Number.parseInt(room.guests, 10) || 1
+      return roomMaxGuests >= guestLimit
     })
-  }, [homeSearchTerm, rooms])
+  }, [hasSearched, selectedGuests, rooms])
 
   const featuredTitle = hasSearched ? 'Search results on home' : 'Rooms built for premium travel'
   const featuredEyebrow = hasSearched ? 'Home search' : 'Featured stays'
@@ -118,7 +113,6 @@ export function HomePage({ navigate }: { navigate: Navigate }) {
               className="ghost-button compact"
               type="button"
               onClick={() => {
-                setHomeSearchTerm('')
                 setHasSearched(false)
               }}
             >
@@ -133,7 +127,7 @@ export function HomePage({ navigate }: { navigate: Navigate }) {
         </div>
         {hasSearched && featuredRooms.length === 0 && (
           <p className="mt-4 rounded-lg border border-slate-700 bg-slate-900/70 p-4 text-sm text-slate-300">
-            No rooms matched this destination. Try another keyword or view all rooms.
+            No rooms match this guest capacity. Try selecting a different guest count or view all rooms.
           </p>
         )}
       </section>

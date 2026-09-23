@@ -4,16 +4,12 @@ import { useToast } from '../../context/ToastContext'
 import type { Navigate } from '../../types'
 import {
   type BookingStay,
-  getRoomSearchQuery,
-  saveRoomSearchQuery,
   saveSelectedStay,
 } from '../../utils/bookingSelections'
 import { formatGuestLabel } from '../../utils/roomLocalization'
 import { Icon } from '../icons/Icon'
 
-export type SearchPayload = BookingStay & {
-  destination: string
-}
+export type SearchPayload = BookingStay
 
 export function SearchPanel({
   navigate,
@@ -26,19 +22,12 @@ export function SearchPanel({
 }) {
   const { language } = useLanguage()
   const { showToast } = useToast()
-  const [destination, setDestination] = useState(() => getRoomSearchQuery() || 'Da Nang Oceanfront')
   const [checkIn, setCheckIn] = useState('2026-10-10')
   const [checkOut, setCheckOut] = useState('2026-10-13')
   const [guests, setGuests] = useState('2')
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-
-    if (!destination.trim()) {
-      const message = 'Please enter a destination.'
-      showToast({ title: 'Destination is required', message, variant: 'error' })
-      return
-    }
 
     if (!checkIn || !checkOut) {
       const message = 'Please select check-in and check-out dates.'
@@ -55,10 +44,8 @@ export function SearchPanel({
       return
     }
 
-    saveRoomSearchQuery(destination)
     saveSelectedStay({ checkIn, checkOut, guests })
     onSearch?.({
-      destination: destination.trim(),
       checkIn,
       checkOut,
       guests,
@@ -74,10 +61,6 @@ export function SearchPanel({
       className="search-panel"
       onSubmit={handleSubmit}
     >
-      <label>
-        <span>Destination</span>
-        <input value={destination} onChange={(event) => setDestination(event.target.value)} />
-      </label>
       <label>
         <span>Check in</span>
         <input value={checkIn} type="date" onChange={(event) => setCheckIn(event.target.value)} />

@@ -229,8 +229,8 @@ export function RoomListingPage({ navigate }: { navigate: Navigate }) {
                   value={searchQuery}
                   placeholder={
                     language === 'vi'
-                      ? 'Tìm kiếm điểm đến, phòng hoặc tiện ích...'
-                      : 'Search destination, room, or amenity...'
+                      ? 'Tìm kiếm phòng hoặc tiện ích...'
+                      : 'Search room, or amenity...'
                   }
                   aria-label={language === 'vi' ? 'Tìm kiếm phòng' : 'Search rooms'}
                   onChange={(event) => {
