@@ -195,6 +195,16 @@ Mo trinh duyet vao:
 ```txt
 http://localhost:5173
 ```
+## 🔑 Test Accounts
+You can use the following default accounts to test different roles in the system:
+
+* **Admin Account:**
+  * Username: `admin@vipbooking.local`
+  * Password: `123456`
+  
+* **Customer Account:**
+  * Username: `user1@gmail.com`
+  * Password: `123456`
 
 ## 8. Scripts
 
@@ -216,6 +226,7 @@ Frontend scripts, chay trong `frontend`:
 | `npm run lint` | Kiem tra ESLint |
 | `npm run format` | Format code bang Prettier |
 | `npm run preview` | Preview ban build |
+
 
 ## 9. Role Hien Tai
 
