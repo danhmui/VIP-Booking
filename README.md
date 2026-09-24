@@ -76,8 +76,11 @@ npm install
 
 ## 4. Chuan Bi Database MySQL
 
+Dam bao MySQL dang chay va co database:
+
 ```sql
-Tao MySQL database co ten vipbooking va import file vipbooking.sql
+CREATE DATABASE IF NOT EXISTS vipbooking;
+Import SQL script vipbooking.sql
 ```
 
 Schema Prisma nam o:
