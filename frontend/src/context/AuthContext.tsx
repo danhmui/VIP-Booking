@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { getCurrentUser, loginWithApi, registerWithApi } from '../api/vipBookingApi'
+import { getCurrentUser, loginWithApi, registerWithApi, changePasswordWithApi } from '../api/vipBookingApi'
+
 import {
   clearAuthSession,
   readAuthSession,
@@ -89,8 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       },
-      changePassword: async () => {
-        return false
+      changePassword: async (currentPassword, newPassword) => {
+        try {
+          await changePasswordWithApi({ currentPassword, newPassword })
+          return true
+        } catch (error) {
+          return false
+        }
       },
       logout: () => {
         clearAuthSession()

@@ -1,6 +1,6 @@
 PORT=8080
 JWT_SECRET="VIP_BOOKING_SECRET_KEY_2026"
-DATABASE_URL="mysql://root@localhost:3306/vipbooking_db"
+DATABASE_URL="mysql://root@localhost:3306/vipbooking"
 
 EMAIL_HOST=sandbox.smtp.mailtrap.io
 EMAIL_PORT=2525

@@ -217,3 +217,54 @@ export const resetPassword = async(req, res) =>{
   }
 }
 
+export const changePassword = async (req, res) => {
+  try {
+    const rawUserId = req.user.id || req.user.user_id; 
+    const { current_password, new_password } = req.body;
+
+    if (!current_password || !new_password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới.',
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { user_id: BigInt(rawUserId) },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy thông tin tài khoản người dùng.',
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(current_password, user.password_hash);
+    if (!isPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mật khẩu hiện tại không chính xác.',
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(new_password, salt);
+
+    await prisma.user.update({
+      where: { user_id: BigInt(rawUserId) },
+      data: { password_hash: hashedPassword },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Đổi mật khẩu thành công.',
+    });
+  } catch (error) {
+    console.error('Change password error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Đã có lỗi xảy ra ở hệ thống.',
+    });
+  }
+};

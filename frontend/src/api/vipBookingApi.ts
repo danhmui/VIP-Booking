@@ -983,3 +983,18 @@ export async function deletePaymentWithApi(paymentId: string) {
   })
   return response.message || 'Payment deleted successfully.'
 }
+
+export async function changePasswordWithApi(payload: {
+  currentPassword: string
+  newPassword: string
+}): Promise<string> {
+  const response = await apiRequest<ApiEnvelope<undefined>>('/api/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({
+      current_password: payload.currentPassword,
+      new_password: payload.newPassword,
+    }),
+  })
+
+  return response.message || 'Password changed successfully.'
+}
